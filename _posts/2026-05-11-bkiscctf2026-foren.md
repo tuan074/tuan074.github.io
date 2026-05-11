@@ -271,14 +271,14 @@ Steps on how to decrypt Zoom main database:
 
  This is the key to decrypt the SQLCipher Zoom database.
  
- 1. Decrypt `zoommeeting.enc.db` with the following params:
- ![image](/assets/images/bkiscctf2026-wu/4.png)
+5. Decrypt `zoommeeting.enc.db` with the following params:
+![image](/assets/images/bkiscctf2026-wu/4.png)
  
- Now we can see what was going on in the class!
+Now we can see what was going on in the class!
  
- ### The Homework
+### The Homework
  
- There is a Drive link from the chat. Downloading gives `homework.rar`. `key.txt` said:
+There is a Drive link from the chat. Downloading gives `homework.rar`. `key.txt` said:
 
 > You have learnt magic in recent online course, the magic that turn a JPG to a PNG, find the key here and do the homework !!!
 All you need is in this rar file.
