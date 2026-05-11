@@ -1,10 +1,11 @@
 ---
 title: BKISC CTF 2026 - Forensics
-date: 2026-05-11 19:13:00 +0700
-categories: [Writeup]
+date: 2026-05-11 19:20:00 +0700
+categories: [writeup]
+tags: [forensics]
 ---
 
-# BKISC CTF 2026 - Forensics
+
 
 I had the oppoturnity to playtest all the Forensics challenges in BKISC CTF 2026. Here is my writeup for all of them (except for __The Interview__).
 
@@ -96,7 +97,7 @@ Function requestpage(uri, rR)
 	oP.open "POST", uri,false
 	oP.setRequestHeader "Content-Type", "application/x-www-form-urlencoded"
 	oP.setRequestHeader "Content-Length", Len(d)
-	oP.setRequestHeader "User-Agent", "Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 10.0; WOW64; Trident/7.0; Specula; Microsoft Outlook " & vi
+	oP.setRequestHeader "User-Agent", "Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 10.0; WOW64; Trident/7.0; Specula; Microsoft Outlook " & vi)
 	oP.setOption 2, 13056
 	oP.send Replace(d, vbLf, "")
 	requestpage = oP.responseText
@@ -267,7 +268,7 @@ Successfully decrypted data
  0010   50 71 41 76 30 46 76 59  52 58 7A 68 71 6C 35 4D   PqAv0FvYRXzhql5M
  0020   2B 38 62 5A 66 33 2F 73  76 31 6B 3D               +8bZf3/sv1k=
  ```
- 
+
  This is the key to decrypt the SQLCipher Zoom database.
  
  5. Decrypt `zoommeeting.enc.db` with the following params:
