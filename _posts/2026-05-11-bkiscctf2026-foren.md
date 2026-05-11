@@ -236,9 +236,10 @@ According to the description, it seems like Zoom is our entrypoint for this chal
 Steps on how to decrypt Zoom main database:
 
 1. Crack the Windows password: first use `secretsdump` on the registry hives to dump the NTLM hash, then crack it using `John The Ripper`. The password we get is `Sup3rR0ckP4ss`.
+
 2. Crack the DPAPI masterkey: use `dpapi/masterkey` of `Impacket`: 
-   
-   ```bash
+  
+```bash
    impacket-dpapi masterkey -file "1d4f66e2-0ad9-4e0b-9f17-c526c4920624" -sid S-1-5-21-2185385569-2550479847-782288727-1000 -password Sup3rR0ckP4ss
    Impacket v0.14.0.dev0 - Copyright Fortra, LLC and its affiliated companies
    
@@ -254,12 +255,13 @@ Steps on how to decrypt Zoom main database:
    
    Decrypted key with User Key (SHA1)
    Decrypted key: 0x416028ce358926baf81aae4bc79ef097efc76d999f266c38f4b3c861625e8700b222d8daccfb2d596438014c54ab50835eeb523f4ce6165a8491653e05e80bae
-   ```
+```
 
 3. Retrieve the Zoom key from `Zoom.us.ini`, strip the `ZWOSKEY` header then save as raw bytes.
+
 4. `unprotect` the key:
  
-   ```bash
+```bash
    impacket-dpapi unprotect -file "zoom_blob.bin" -key 0x416028ce358926baf81aae4bc79ef097efc76d999f266c38f4b3c861625e8700b222d8daccfb2d596438014c54ab50835eeb523f4ce6165a8491653e05e80bae
    Impacket v0.14.0.dev0 - Copyright Fortra, LLC and its affiliated companies
    
@@ -267,12 +269,12 @@ Steps on how to decrypt Zoom main database:
     0000   6E 63 6A 34 48 4E 31 34  45 4D 67 6D 66 31 74 75   ncj4HN14EMgmf1tu
     0010   50 71 41 76 30 46 76 59  52 58 7A 68 71 6C 35 4D   PqAv0FvYRXzhql5M
     0020   2B 38 62 5A 66 33 2F 73  76 31 6B 3D               +8bZf3/sv1k=
-   ```
+```
 
- This is the key to decrypt the SQLCipher Zoom database.
+This is the key to decrypt the SQLCipher Zoom database.
  
 5. Decrypt `zoommeeting.enc.db` with the following params:
-![image](/assets/images/bkiscctf2026-wu/4.png)
+   ![image](/assets/images/bkiscctf2026-wu/4.png)
  
 Now we can see what was going on in the class!
  
@@ -315,8 +317,7 @@ With all the information needed, I wrote a script to get the hidden image:
 ```
 
 And I got the flag!
-
-![image](/assets/images/bkiscctf2026-wu/7.png)
+   ![image](/assets/images/bkiscctf2026-wu/7.png)
 
 Flag: `BKISC{Y0u_G0t_A_F0r_Th1s_St3g4n0gr4phy_Cl4ss}`
 
@@ -340,8 +341,7 @@ First thing I saw was Thunderbird so I decided to check it. There was a mail bet
 ### The artifact
 
 Windows Search Indexer records contents from a few file types (`.pdf`, `.txt`,...) in the AutoSummary column. I headed to Windows.edb and found something interesting:
-
-![image](/assets/images/bkiscctf2026-wu/8.png)
+   ![image](/assets/images/bkiscctf2026-wu/8.png)
 
 A part of `target.txt` and `Instructions.pdf` was cached. There was a base32 string in `target.txt` which decodes to a part of the flag `BKISC{Woah_I_r34lly_dunno_`
 
@@ -353,17 +353,17 @@ Briar stores its database key inside `db.key`. The file contains the actual secr
 
 - `db.key` has a certain format:
 
-  ```bash
-  Offset   Size    Field
-  ------   ----    -----
-  0        1B      Format version
-                        0x00 = plain scrypt
-                        0x01 = scrypt + KeyStrengthener (e.g. hardware-backed)
-  1        32B     Salt (random bytes, used as input to scrypt)
-  33       4B      Cost parameter N (uint32, big-endian)
-  37       24B     IV / nonce (random bytes, used as input to cipher)
-  61       ?B      Ciphertext + 16-byte Poly1305 MAC tag
-  ```
+```bash
+   Offset   Size    Field
+   ------   ----    -----
+   0        1B      Format version
+                         0x00 = plain scrypt
+                         0x01 = scrypt + KeyStrengthener (e.g. hardware-backed)
+   1        32B     Salt (random bytes, used as input to scrypt)
+   33       4B      Cost parameter N (uint32, big-endian)
+   37       24B     IV / nonce (random bytes, used as input to cipher)
+   61       ?B      Ciphertext + 16-byte Poly1305 MAC tag
+```
 - Briar user password is plugged into Scrypt (brute-forcing is very slow) along with some more params
 - Uses XSalsa20Poly1305 on the output of KDF (Scrypt), then outputs the key which is used to connect to the database.
 
@@ -378,39 +378,39 @@ The clipboard blob is in `C:\Users\supadupadev\AppData\Local\Microsoft\Windows\C
 This blob is a CMS EnvelopedData file. It is protected by DPAPI-NG. To decrypt, first dump and parse it using the ASN.1 format by using `openssl`:
 
 ```bash
-openssl asn1parse -inform DER -in clipboard_blob.bin
-    0:d=0  hl=4 l= 449 cons: SEQUENCE
-    4:d=1  hl=2 l=   9 prim: OBJECT            :pkcs7-envelopedData
-   15:d=1  hl=4 l= 434 cons: cont [ 0 ]
-   19:d=2  hl=4 l= 430 cons: SEQUENCE
-   23:d=3  hl=2 l=   1 prim: INTEGER           :02
-   26:d=3  hl=4 l= 378 cons: SET
-   30:d=4  hl=4 l= 374 cons: cont [ 2 ]
-   34:d=5  hl=2 l=   1 prim: INTEGER           :04
-   37:d=5  hl=4 l= 312 cons: SEQUENCE
-   41:d=6  hl=4 l= 262 prim: OCTET STRING      [HEX DUMP]:01000000D08C9DDF0115D1118C7A00C04FC297EB01000000464D3933D9414E4986C71B0EA4D0D5C90000000002000000000010660000000100002000000042BCAF6862552BAC26B4509A59211688E637D38C01ADD1CCDD89FF7B4F4446B7000000000E8000000002000020000000080A9BF9D836E0440A5568E1B1258227BB5D0FBFB3B81F2E449B2CD006D47445300000000B7DDA286531BCAF625159B3652BA08736B02B8AD2783EF8BB075B33F667DB24CCD21703D12C38A31A53C1DB5B090C06400000006F491754F90F9F9A1765AFF53576005D4A8C079349CED82F654C9E3DC2786A5BFF44133E1C42DB857C0056F60A4907A2C0B16A6E06348ECD13D608859943E96F
-  307:d=6  hl=2 l=  44 cons: SEQUENCE
-  309:d=7  hl=2 l=   9 prim: OBJECT            :1.3.6.1.4.1.311.74.1
-  320:d=7  hl=2 l=  31 cons: SEQUENCE
-  322:d=8  hl=2 l=  10 prim: OBJECT            :1.3.6.1.4.1.311.74.1.8
-  334:d=8  hl=2 l=  17 cons: SEQUENCE
-  336:d=9  hl=2 l=  15 cons: SEQUENCE
-  338:d=10 hl=2 l=  13 cons: SEQUENCE
-  340:d=11 hl=2 l=   5 prim: UTF8STRING        :LOCAL
-  347:d=11 hl=2 l=   4 prim: UTF8STRING        :user
-  353:d=5  hl=2 l=  11 cons: SEQUENCE
-  355:d=6  hl=2 l=   9 prim: OBJECT            :id-aes256-wrap
-  366:d=5  hl=2 l=  40 prim: OCTET STRING      [HEX DUMP]:CF1E6E54FC949774F120F56C4B421D262B8D432E016A7CC7F80EB2E8B11C18992B86B1FC41B5E749
-  408:d=3  hl=2 l=  43 cons: SEQUENCE
-  410:d=4  hl=2 l=   9 prim: OBJECT            :pkcs7-data
-  421:d=4  hl=2 l=  30 cons: SEQUENCE
-  423:d=5  hl=2 l=   9 prim: OBJECT            :aes-256-gcm
-  434:d=5  hl=2 l=  17 cons: SEQUENCE
-  436:d=6  hl=2 l=  12 prim: OCTET STRING      [HEX DUMP]:ECBBD73E345BD7F530F4BAA0
-  450:d=6  hl=2 l=   1 prim: INTEGER           :10
-  453:d=0  hl=2 l=   5 cons: appl [ 23 ]
-Error in encoding
-40E7E1430D7A0000:error:0680007B:asn1 encoding routines:ASN1_get_object:header too long:../crypto/asn1/asn1_lib.c:105:
+   openssl asn1parse -inform DER -in clipboard_blob.bin
+       0:d=0  hl=4 l= 449 cons: SEQUENCE
+       4:d=1  hl=2 l=   9 prim: OBJECT            :pkcs7-envelopedData
+      15:d=1  hl=4 l= 434 cons: cont [ 0 ]
+      19:d=2  hl=4 l= 430 cons: SEQUENCE
+      23:d=3  hl=2 l=   1 prim: INTEGER           :02
+      26:d=3  hl=4 l= 378 cons: SET
+      30:d=4  hl=4 l= 374 cons: cont [ 2 ]
+      34:d=5  hl=2 l=   1 prim: INTEGER           :04
+      37:d=5  hl=4 l= 312 cons: SEQUENCE
+      41:d=6  hl=4 l= 262 prim: OCTET STRING      [HEX DUMP]:01000000D08C9DDF0115D1118C7A00C04FC297EB01000000464D3933D9414E4986C71B0EA4D0D5C90000000002000000000010660000000100002000000042BCAF6862552BAC26B4509A59211688E637D38C01ADD1CCDD89FF7B4F4446B7000000000E8000000002000020000000080A9BF9D836E0440A5568E1B1258227BB5D0FBFB3B81F2E449B2CD006D47445300000000B7DDA286531BCAF625159B3652BA08736B02B8AD2783EF8BB075B33F667DB24CCD21703D12C38A31A53C1DB5B090C06400000006F491754F90F9F9A1765AFF53576005D4A8C079349CED82F654C9E3DC2786A5BFF44133E1C42DB857C0056F60A4907A2C0B16A6E06348ECD13D608859943E96F
+     307:d=6  hl=2 l=  44 cons: SEQUENCE
+     309:d=7  hl=2 l=   9 prim: OBJECT            :1.3.6.1.4.1.311.74.1
+     320:d=7  hl=2 l=  31 cons: SEQUENCE
+     322:d=8  hl=2 l=  10 prim: OBJECT            :1.3.6.1.4.1.311.74.1.8
+     334:d=8  hl=2 l=  17 cons: SEQUENCE
+     336:d=9  hl=2 l=  15 cons: SEQUENCE
+     338:d=10 hl=2 l=  13 cons: SEQUENCE
+     340:d=11 hl=2 l=   5 prim: UTF8STRING        :LOCAL
+     347:d=11 hl=2 l=   4 prim: UTF8STRING        :user
+     353:d=5  hl=2 l=  11 cons: SEQUENCE
+     355:d=6  hl=2 l=   9 prim: OBJECT            :id-aes256-wrap
+     366:d=5  hl=2 l=  40 prim: OCTET STRING      [HEX DUMP]:CF1E6E54FC949774F120F56C4B421D262B8D432E016A7CC7F80EB2E8B11C18992B86B1FC41B5E749
+     408:d=3  hl=2 l=  43 cons: SEQUENCE
+     410:d=4  hl=2 l=   9 prim: OBJECT            :pkcs7-data
+     421:d=4  hl=2 l=  30 cons: SEQUENCE
+     423:d=5  hl=2 l=   9 prim: OBJECT            :aes-256-gcm
+     434:d=5  hl=2 l=  17 cons: SEQUENCE
+     436:d=6  hl=2 l=  12 prim: OCTET STRING      [HEX DUMP]:ECBBD73E345BD7F530F4BAA0
+     450:d=6  hl=2 l=   1 prim: INTEGER           :10
+     453:d=0  hl=2 l=   5 cons: appl [ 23 ]
+   Error in encoding
+   40E7E1430D7A0000:error:0680007B:asn1 encoding routines:ASN1_get_object:header too long:../crypto/asn1/asn1_lib.c:105:
 ```
 
 That huge blob from offset 41 is Key Encryption Key (KEK).
@@ -418,42 +418,42 @@ That huge blob from offset 41 is Key Encryption Key (KEK).
 Get the DPAPI masterkey as normal, then, unprotect this blob:
 
 ```bash
-impacket-dpapi unprotect -file clipboard_dpapi.bin -key 0x4d59a1889dfd27ae39ad952533f9c070b77e90536308ef94c331be330e3973384d28d62ce4681f670304507387c5a444f86d6a65d17a2348b366e204f6d48931
-Impacket v0.14.0.dev0 - Copyright Fortra, LLC and its affiliated companies
-
-Successfully decrypted data
- 0000   29 1B F7 6C 9F 97 01 E5  0E 27 80 31 54 9D 86 05   )..l.....'.1T...
- 0010   47 D2 D1 78 B6 3F BA F3  57 F9 26 21 68 78 55 71   G..x.?..W.&!hxUq
+   impacket-dpapi unprotect -file clipboard_dpapi.bin -key 0x4d59a1889dfd27ae39ad952533f9c070b77e90536308ef94c331be330e3973384d28d62ce4681f670304507387c5a444f86d6a65d17a2348b366e204f6d48931
+   Impacket v0.14.0.dev0 - Copyright Fortra, LLC and its affiliated companies
+   
+   Successfully decrypted data
+    0000   29 1B F7 6C 9F 97 01 E5  0E 27 80 31 54 9D 86 05   )..l.....'.1T...
+    0010   47 D2 D1 78 B6 3F BA F3  57 F9 26 21 68 78 55 71   G..x.?..W.&!hxUq
 ```
 Unwrap the actual key by using the blob in offset 366, then AES decrypt the remaining data (from offset 453) using the unwrapped key and IV (offset 436):
 
 ```python
-from cryptography.hazmat.primitives.keywrap import aes_key_unwrap
-from cryptography.hazmat.backends import default_backend
-from Crypto.Cipher import AES
-
-# Output from impacket = KEK, not CEK
-kek = bytes.fromhex("291BF76C9F9701E50E278031549D860547D2D178B63FBAF357F9262168785571")
-
-# Wrapped CEK from ASN.1 offset 366 (40 bytes)
-wrapped_cek = bytes.fromhex("CF1E6E54FC949774F120F56C4B421D262B8D432E016A7CC7F80EB2E8B11C18992B86B1FC41B5E749")
-
-# Unwrap to get actual CEK (RFC 3394)
-cek = aes_key_unwrap(kek, wrapped_cek, default_backend())
-print("CEK:", cek.hex())
-
-# Now decrypt with AES-256-GCM
-iv = bytes.fromhex("ECBBD73E345BD7F530F4BAA0")
-
-with open("clipboard_blob.bin", "rb") as f:
-    data = f.read()
-
-ciphertext = data[453:]
-ct, tag = ciphertext[:-16], ciphertext[-16:]
-
-cipher = AES.new(cek, AES.MODE_GCM, nonce=iv)
-plaintext = cipher.decrypt_and_verify(ct, tag)
-print(plaintext.decode("utf-16-le"))
+   from cryptography.hazmat.primitives.keywrap import aes_key_unwrap
+   from cryptography.hazmat.backends import default_backend
+   from Crypto.Cipher import AES
+   
+   # Output from impacket = KEK, not CEK
+   kek = bytes.fromhex("291BF76C9F9701E50E278031549D860547D2D178B63FBAF357F9262168785571")
+   
+   # Wrapped CEK from ASN.1 offset 366 (40 bytes)
+   wrapped_cek = bytes.fromhex("CF1E6E54FC949774F120F56C4B421D262B8D432E016A7CC7F80EB2E8B11C18992B86B1FC41B5E749")
+   
+   # Unwrap to get actual CEK (RFC 3394)
+   cek = aes_key_unwrap(kek, wrapped_cek, default_backend())
+   print("CEK:", cek.hex())
+   
+   # Now decrypt with AES-256-GCM
+   iv = bytes.fromhex("ECBBD73E345BD7F530F4BAA0")
+   
+   with open("clipboard_blob.bin", "rb") as f:
+       data = f.read()
+   
+   ciphertext = data[453:]
+   ct, tag = ciphertext[:-16], ciphertext[-16:]
+   
+   cipher = AES.new(cek, AES.MODE_GCM, nonce=iv)
+   plaintext = cipher.decrypt_and_verify(ct, tag)
+   print(plaintext.decode("utf-16-le"))
 ```
 
 This script outputs the content from clipboard, which is `Gho67qqxmv36!26@@@`.
@@ -463,94 +463,93 @@ This script outputs the content from clipboard, which is `Gho67qqxmv36!26@@@`.
 I asked Claude (😭) to recreate the encryption scheme from Briar and get the 32-byte database key:
 
 ```python
-import sys
-import hashlib
-import struct
-import argparse
-import time
-import nacl.secret
-import nacl.exceptions
-
-DB_KEY_HEX = "00F63DA9BC7C9265B50E5FD921C729799484E9967FFB6BAFE1BE2C0C03F3E30AF900020000ED30F33974FA2733D83D9830A260D63320AC5CA04023FF33F92172EF547F54FA261C705ECBF9B5C38817A6B7290138F751FFBE8E806E1DBCBF61EB62A9F4FBF66AAA739808AA7738"
-DATA = bytes.fromhex(DB_KEY_HEX)
-
-def parse_blob(hex_str):
-    data = bytes.fromhex(hex_str.replace("\n", "").replace(" ", ""))
-
-    format_ver = data[0]          # 1 byte
-    salt       = data[1:33]       # 32 bytes
-    cost       = struct.unpack(">I", data[33:37])[0]  # 4 bytes, big-endian uint32
-    iv         = data[37:61]      # 24 bytes
-    ciphertext = data[61:]        # remaining bytes (ciphertext + MAC)
-
-    return format_ver, salt, cost, iv, ciphertext
-
-SCRYPT_R = 8   # hardcoded in Briar's PasswordBasedKdf
-SCRYPT_P = 1   # hardcoded in Briar's PasswordBasedKdf
-KEY_LEN  = 32  # SecretKey.LENGTH in Briar
-
-
-def derive_key(password: str, salt: bytes, cost: int) -> bytes:
-    return hashlib.scrypt(
-        password=password.encode("utf-8"),
-        salt=salt,
-        n=cost,       # CPU/memory cost (131072 in our blob)
-        r=SCRYPT_R,   # block size
-        p=SCRYPT_P,   # parallelization
-        dklen=KEY_LEN,# output length = 32 bytes
-        maxmem = 256 * 1024 * 1024 
-    )
-
-def try_password(password: str, salt: bytes, cost: int, iv: bytes, ciphertext: bytes):
-    """
-    Returns the decrypted 32-byte SecretKey if password is correct.
-    Returns None if password is wrong (MAC verification failed).
-    """
-    # Step 1: derive 32-byte key from password using scrypt
-    candidate_key = derive_key(password, salt, cost)
-
-    # Step 2: attempt XSalsa20Poly1305 decryption
-    # PyNaCl's SecretBox.decrypt() internally:
-    #   - decrypts with XSalsa20 using candidate_key + iv
-    #   - verifies Poly1305 MAC
-    #   - raises CryptoError if MAC doesn't match (wrong password)
-    try:
-        box = nacl.secret.SecretBox(candidate_key)
-        plaintext = box.decrypt(ciphertext, nonce=iv)
-        return plaintext  # 32 bytes = the raw database SecretKey
-    except nacl.exceptions.CryptoError:
-        return None  # wrong password
-
-def main():
-    PASSWORD = "Gho67qqxmv36!26@@@"  # <-- paste the known password here
-
-    format_ver, salt, cost, iv, ciphertext = parse_blob(DB_KEY_HEX)
-
-    print(f"[*] Deriving key with scrypt (may take a moment)...")
-    result = try_password(PASSWORD, salt, cost, iv, ciphertext)
-
-    if result is not None:
-        print(f"[+] SUCCESS!")
-        print(f"[+] Database key (hex): {result.hex()}")
-        print(f"[+] Database key (b64): {__import__('base64').b64encode(result).decode()}")
-    else:
-        print(f"[-] Decryption failed — wrong password or corrupted blob.")
-
-
-if __name__ == "__main__":
-    main()
+   import sys
+   import hashlib
+   import struct
+   import argparse
+   import time
+   import nacl.secret
+   import nacl.exceptions
+   
+   DB_KEY_HEX = "00F63DA9BC7C9265B50E5FD921C729799484E9967FFB6BAFE1BE2C0C03F3E30AF900020000ED30F33974FA2733D83D9830A260D63320AC5CA04023FF33F92172EF547F54FA261C705ECBF9B5C38817A6B7290138F751FFBE8E806E1DBCBF61EB62A9F4FBF66AAA739808AA7738"
+   DATA = bytes.fromhex(DB_KEY_HEX)
+   
+   def parse_blob(hex_str):
+       data = bytes.fromhex(hex_str.replace("\n", "").replace(" ", ""))
+   
+       format_ver = data[0]          # 1 byte
+       salt       = data[1:33]       # 32 bytes
+       cost       = struct.unpack(">I", data[33:37])[0]  # 4 bytes, big-endian uint32
+       iv         = data[37:61]      # 24 bytes
+       ciphertext = data[61:]        # remaining bytes (ciphertext + MAC)
+   
+       return format_ver, salt, cost, iv, ciphertext
+   
+   SCRYPT_R = 8   # hardcoded in Briar's PasswordBasedKdf
+   SCRYPT_P = 1   # hardcoded in Briar's PasswordBasedKdf
+   KEY_LEN  = 32  # SecretKey.LENGTH in Briar
+   
+   
+   def derive_key(password: str, salt: bytes, cost: int) -> bytes:
+       return hashlib.scrypt(
+           password=password.encode("utf-8"),
+           salt=salt,
+           n=cost,       # CPU/memory cost (131072 in our blob)
+           r=SCRYPT_R,   # block size
+           p=SCRYPT_P,   # parallelization
+           dklen=KEY_LEN,# output length = 32 bytes
+           maxmem = 256 * 1024 * 1024 
+       )
+   
+   def try_password(password: str, salt: bytes, cost: int, iv: bytes, ciphertext: bytes):
+       """
+       Returns the decrypted 32-byte SecretKey if password is correct.
+       Returns None if password is wrong (MAC verification failed).
+       """
+       # Step 1: derive 32-byte key from password using scrypt
+       candidate_key = derive_key(password, salt, cost)
+   
+       # Step 2: attempt XSalsa20Poly1305 decryption
+       # PyNaCl's SecretBox.decrypt() internally:
+       #   - decrypts with XSalsa20 using candidate_key + iv
+       #   - verifies Poly1305 MAC
+       #   - raises CryptoError if MAC doesn't match (wrong password)
+       try:
+           box = nacl.secret.SecretBox(candidate_key)
+           plaintext = box.decrypt(ciphertext, nonce=iv)
+           return plaintext  # 32 bytes = the raw database SecretKey
+       except nacl.exceptions.CryptoError:
+           return None  # wrong password
+   
+   def main():
+       PASSWORD = "Gho67qqxmv36!26@@@"  # <-- paste the known password here
+   
+       format_ver, salt, cost, iv, ciphertext = parse_blob(DB_KEY_HEX)
+   
+       print(f"[*] Deriving key with scrypt (may take a moment)...")
+       result = try_password(PASSWORD, salt, cost, iv, ciphertext)
+   
+       if result is not None:
+           print(f"[+] SUCCESS!")
+           print(f"[+] Database key (hex): {result.hex()}")
+           print(f"[+] Database key (b64): {__import__('base64').b64encode(result).decode()}")
+       else:
+           print(f"[-] Decryption failed — wrong password or corrupted blob.")
+   
+   
+   if __name__ == "__main__":
+       main()
 ```
 
-```
-[*] Deriving key with scrypt (may take a moment)...
-[+] SUCCESS!
-[+] Database key (hex): 84302fcb7c58a97a8e7a4cf5fc645a3875a4359f19a1ac0187e3f24020f01e03
-[+] Database key (b64): hDAvy3xYqXqOekz1/GRaOHWkNZ8ZoawBh+PyQCDwHgM=
+```bash
+   [*] Deriving key with scrypt (may take a moment)...
+   [+] SUCCESS!
+   [+] Database key (hex): 84302fcb7c58a97a8e7a4cf5fc645a3875a4359f19a1ac0187e3f24020f01e03
+   [+] Database key (b64): hDAvy3xYqXqOekz1/GRaOHWkNZ8ZoawBh+PyQCDwHgM=
 ```
 
 This is how Briar uses the derived key to connect to the database:
-
-![image](/assets/images/bkiscctf2026-wu/9.png)
+   ![image](/assets/images/bkiscctf2026-wu/9.png)
 
 Username is `user`. Password is uppercase database key + the string `password`.
 
@@ -566,8 +565,7 @@ Username is `user`. Password is uppercase database key + the string `password`.
 ```
 
 I got `tools.zip` from the Drive link. Unzip it using the secret from `Instructions.pdf`, which is `Mot_con_vit_xoe_r4_h4i_c4i_c4nh!!!` to get `tools.exe`. This file contains a Gist link. I went to it and saw a weird encoded string:
-
-![image](/assets/images/bkiscctf2026-wu/10.png)
+   ![image](/assets/images/bkiscctf2026-wu/10.png)
 
 This is the second part of the flag encoded in Base45.
 
