@@ -235,9 +235,9 @@ According to the description, it seems like Zoom is our entrypoint for this chal
 
 Steps on how to decrypt Zoom main database:
 
-1. Crack the Windows password: first use `secretsdump` on the registry hives to dump the NTLM hash, then crack it using `John The Ripper`. The password we get is `Sup3rR0ckP4ss`.
+- Crack the Windows password: first use `secretsdump` on the registry hives to dump the NTLM hash, then crack it using `John The Ripper`. The password we get is `Sup3rR0ckP4ss`.
 
-2. Crack the DPAPI masterkey: use `dpapi/masterkey` of `Impacket`: 
+- Crack the DPAPI masterkey: use `dpapi/masterkey` of `Impacket`: 
   
 ```bash
    impacket-dpapi masterkey -file "1d4f66e2-0ad9-4e0b-9f17-c526c4920624" -sid S-1-5-21-2185385569-2550479847-782288727-1000 -password Sup3rR0ckP4ss
@@ -257,9 +257,9 @@ Steps on how to decrypt Zoom main database:
    Decrypted key: 0x416028ce358926baf81aae4bc79ef097efc76d999f266c38f4b3c861625e8700b222d8daccfb2d596438014c54ab50835eeb523f4ce6165a8491653e05e80bae
 ```
 
-3. Retrieve the Zoom key from `Zoom.us.ini`, strip the `ZWOSKEY` header then save as raw bytes.
+- Retrieve the Zoom key from `Zoom.us.ini`, strip the `ZWOSKEY` header then save as raw bytes.
 
-4. `unprotect` the key:
+- `unprotect` the key:
  
 ```bash
    impacket-dpapi unprotect -file "zoom_blob.bin" -key 0x416028ce358926baf81aae4bc79ef097efc76d999f266c38f4b3c861625e8700b222d8daccfb2d596438014c54ab50835eeb523f4ce6165a8491653e05e80bae
@@ -273,7 +273,7 @@ Steps on how to decrypt Zoom main database:
 
 This is the key to decrypt the SQLCipher Zoom database.
  
-5. Decrypt `zoommeeting.enc.db` with the following params:
+- Decrypt `zoommeeting.enc.db` with the following params:
    ![image](/assets/images/bkiscctf2026-wu/4.png)
  
 Now we can see what was going on in the class!
