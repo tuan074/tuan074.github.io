@@ -238,7 +238,7 @@ Steps on how to decrypt Zoom main database:
 1. Crack the Windows password: first use `secretsdump` on the registry hives to dump the NTLM hash, then crack it using `John The Ripper`. The password we get is `Sup3rR0ckP4ss`.
 2. Crack the DPAPI masterkey: use `dpapi/masterkey` of `Impacket`: 
    
-```bash
+   ```bash
    impacket-dpapi masterkey -file "1d4f66e2-0ad9-4e0b-9f17-c526c4920624" -sid S-1-5-21-2185385569-2550479847-782288727-1000 -password Sup3rR0ckP4ss
    Impacket v0.14.0.dev0 - Copyright Fortra, LLC and its affiliated companies
    
@@ -254,12 +254,12 @@ Steps on how to decrypt Zoom main database:
    
    Decrypted key with User Key (SHA1)
    Decrypted key: 0x416028ce358926baf81aae4bc79ef097efc76d999f266c38f4b3c861625e8700b222d8daccfb2d596438014c54ab50835eeb523f4ce6165a8491653e05e80bae
-```
+   ```
 
 3. Retrieve the Zoom key from `Zoom.us.ini`, strip the `ZWOSKEY` header then save as raw bytes.
 4. `unprotect` the key:
  
-```bash
+   ```bash
    impacket-dpapi unprotect -file "zoom_blob.bin" -key 0x416028ce358926baf81aae4bc79ef097efc76d999f266c38f4b3c861625e8700b222d8daccfb2d596438014c54ab50835eeb523f4ce6165a8491653e05e80bae
    Impacket v0.14.0.dev0 - Copyright Fortra, LLC and its affiliated companies
    
@@ -267,7 +267,7 @@ Steps on how to decrypt Zoom main database:
     0000   6E 63 6A 34 48 4E 31 34  45 4D 67 6D 66 31 74 75   ncj4HN14EMgmf1tu
     0010   50 71 41 76 30 46 76 59  52 58 7A 68 71 6C 35 4D   PqAv0FvYRXzhql5M
     0020   2B 38 62 5A 66 33 2F 73  76 31 6B 3D               +8bZf3/sv1k=
- ```
+   ```
 
  This is the key to decrypt the SQLCipher Zoom database.
  
@@ -353,17 +353,17 @@ Briar stores its database key inside `db.key`. The file contains the actual secr
 
 - `db.key` has a certain format:
 
-```bash
-Offset   Size    Field
-------   ----    -----
-0        1B      Format version
-                      0x00 = plain scrypt
-                      0x01 = scrypt + KeyStrengthener (e.g. hardware-backed)
-1        32B     Salt (random bytes, used as input to scrypt)
-33       4B      Cost parameter N (uint32, big-endian)
-37       24B     IV / nonce (random bytes, used as input to cipher)
-61       ?B      Ciphertext + 16-byte Poly1305 MAC tag
-```
+  ```bash
+  Offset   Size    Field
+  ------   ----    -----
+  0        1B      Format version
+                        0x00 = plain scrypt
+                        0x01 = scrypt + KeyStrengthener (e.g. hardware-backed)
+  1        32B     Salt (random bytes, used as input to scrypt)
+  33       4B      Cost parameter N (uint32, big-endian)
+  37       24B     IV / nonce (random bytes, used as input to cipher)
+  61       ?B      Ciphertext + 16-byte Poly1305 MAC tag
+  ```
 - Briar user password is plugged into Scrypt (brute-forcing is very slow) along with some more params
 - Uses XSalsa20Poly1305 on the output of KDF (Scrypt), then outputs the key which is used to connect to the database.
 
