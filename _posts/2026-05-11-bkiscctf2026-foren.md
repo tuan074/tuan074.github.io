@@ -17,7 +17,7 @@ Challenge gives us a memory dump. I used Volatility 3 to analyze it.
 
 Running `pstree`, I noticed lots of `msedge.exe` processes running. Something fishy might be related to Edge. First thing I did was dumping out the `History` database, and
 
-![image](https://hackmd.io/_uploads/SJKL-a30Wg.png)
+![image](/assets/images/bkiscctf2026-wu/1.png)
 
 ...i got lucky. This is a Pastebin link that contains the flag itself. But it is locked by a password. To get the Pastebin password, we need to retrieve the Windows password, use that to get the DPAPI masterkey, then unprotect the blob using that masterkey.
 
@@ -27,7 +27,7 @@ Turns out the answer is yes. Researchers find that when you start Edge, it decry
 
 I had taken a look into the PoC of this discovery and found that all the credentials could be extracted by searching for strings that match a regex. I then used `grep` on the memdump using that regex and actually found the password.
 
-![image](https://hackmd.io/_uploads/rkD8Sa3CWx.png)
+![image](/assets/images/bkiscctf2026-wu/2.png)
 
 Flag: `BKISC{W3ll_M3mory_is_Str0nk_right_?}`
 
@@ -214,7 +214,7 @@ What this script does:
 And the next blobs in the stream are encrypted. To understand what the blobs are, we just need to find the key and reverse XOR them.
 
 The key is in __Software\Microsoft\Office\16.0\Outlook\UserInfo__:
-![image](https://hackmd.io/_uploads/BypulJ00bg.png)
+![image](/assets/images/bkiscctf2026-wu/3.png)
 
 By decrypting those blobs, I recovered an exfiltrated file named `flag.py`. I ran it and got the flag.
 
@@ -272,7 +272,7 @@ Successfully decrypted data
  This is the key to decrypt the SQLCipher Zoom database.
  
  5. Decrypt `zoommeeting.enc.db` with the following params:
- ![image](https://hackmd.io/_uploads/HyXmfxykMe.png)
+ ![image](/assets/images/bkiscctf2026-wu/4.png)
  
  Now we can see what was going on in the class!
  
@@ -287,12 +287,12 @@ I inspected the `.jpg` file and noticed there were garbage bytes after `ff d9`. 
 
 The method applied here is called __Angecryption__. It is a method that could encrypt/decrypt a valid file into another valid file. This method could be described simply as follows:
 
-![image](https://hackmd.io/_uploads/Hk8a5lk1fg.png)
+![image](/assets/images/bkiscctf2026-wu/5.png)
 
 Because the junk appended at the end could be "controlled", we can hide a second image that gets revealed by reversing the process. And because Windows only looks for a valid header to determine the file type, we can totally put those junk bytes at the start of the original file.
 
 But where are the key and IV? Those are hidden inside the ADS of the `.rar`:
-![image](https://hackmd.io/_uploads/r1p5nl11zx.png)
+![image](/assets/images/bkiscctf2026-wu/6.png)
 
 With all the information needed, I wrote a script to get the hidden image:
 
@@ -316,7 +316,7 @@ decrypt_image('homework.jpg', 'decrypted_image.png')
 
 And I got the flag!
 
-![image](https://hackmd.io/_uploads/HygNTgykfg.png)
+![image](/assets/images/bkiscctf2026-wu/7.png)
 
 Flag: `BKISC{Y0u_G0t_A_F0r_Th1s_St3g4n0gr4phy_Cl4ss}`
 
@@ -341,7 +341,7 @@ First thing I saw was Thunderbird so I decided to check it. There was a mail bet
 
 Windows Search Indexer records contents from a few file types (`.pdf`, `.txt`,...) in the AutoSummary column. I headed to Windows.edb and found something interesting:
 
-![image](https://hackmd.io/_uploads/HJ-qUWy1Ge.png)
+![image](/assets/images/bkiscctf2026-wu/8.png)
 
 A part of `target.txt` and `Instructions.pdf` was cached. There was a base32 string in `target.txt` which decodes to a part of the flag `BKISC{Woah_I_r34lly_dunno_`
 
@@ -549,7 +549,7 @@ if __name__ == "__main__":
 
 This is how Briar uses the derived key to connect to the database:
 
-![image](https://hackmd.io/_uploads/rJgWNzJ1Mg.png)
+![image](/assets/images/bkiscctf2026-wu/9.png)
 
 Username is `user`. Password is uppercase database key + the string `password`.
 
@@ -565,7 +565,7 @@ Username is `user`. Password is uppercase database key + the string `password`.
 ```
 I got `tools.zip` from the Drive link. Unzip it using the secret from `Instructions.pdf`, which is `Mot_con_vit_xoe_r4_h4i_c4i_c4nh!!!` to get `tools.exe`. This file contains a Gist link. I went to it and saw a weird encoded string:
 
-![image](https://hackmd.io/_uploads/H1ob9G11Gg.png)
+![image](/assets/images/bkiscctf2026-wu/10.png)
 
 This is the second part of the flag encoded in Base45.
 
