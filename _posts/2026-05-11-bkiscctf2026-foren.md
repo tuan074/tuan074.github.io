@@ -259,6 +259,7 @@ Decrypted key: 0x416028ce358926baf81aae4bc79ef097efc76d999f266c38f4b3c861625e870
 
 3. Retrieve the Zoom key from `Zoom.us.ini`, strip the `ZWOSKEY` header then save as raw bytes.
 4. `unprotect` the key:
+ 
 ```
 impacket-dpapi unprotect -file "zoom_blob.bin" -key 0x416028ce358926baf81aae4bc79ef097efc76d999f266c38f4b3c861625e8700b222d8daccfb2d596438014c54ab50835eeb523f4ce6165a8491653e05e80bae
 Impacket v0.14.0.dev0 - Copyright Fortra, LLC and its affiliated companies
@@ -271,7 +272,7 @@ Successfully decrypted data
 
  This is the key to decrypt the SQLCipher Zoom database.
  
- 5. Decrypt `zoommeeting.enc.db` with the following params:
+ 1. Decrypt `zoommeeting.enc.db` with the following params:
  ![image](/assets/images/bkiscctf2026-wu/4.png)
  
  Now we can see what was going on in the class!
