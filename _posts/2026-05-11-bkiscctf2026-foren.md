@@ -565,7 +565,8 @@ Username is `user`. Password is uppercase database key + the string `password`.
 ```
 
 I got `tools.zip` from the Drive link. Unzip it using the secret from `Instructions.pdf`, which is `Mot_con_vit_xoe_r4_h4i_c4i_c4nh!!!` to get `tools.exe`. This file contains a Gist link. I went to it and saw a weird encoded string:
-   ![image](/assets/images/bkiscctf2026-wu/10.png)
+
+![image](/assets/images/bkiscctf2026-wu/10.png)
 
 This is the second part of the flag encoded in Base45.
 
