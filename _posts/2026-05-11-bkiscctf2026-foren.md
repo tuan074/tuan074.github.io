@@ -5,7 +5,7 @@ categories: [writeup]
 tags: [forensics]
 ---
 
-
+#
 
 I had the oppoturnity to playtest all the Forensics challenges in BKISC CTF 2026. Here is my writeup for all of them (except for __The Interview__).
 
